@@ -41,34 +41,27 @@ def tournament_selection(fitness):
 
 	selected = np.array([], dtype=int)
 
-	all_places = np.array(range(0, len(fitness)))
-
 	# fitness tem o tamanho da população
 	for _ in range(0, len(fitness)):
 
-		individual_one = np.random.choice(all_places)
+		individual_one = np.random.randint(0, len(fitness))
 
-		individual_two = np.random.choice(all_places)
+		individual_two = np.random.randint(0, len(fitness))
 
 		selected_individual = np.argmin([fitness[individual_one], fitness[individual_two]])
 
 		selected = np.append(selected, [individual_one, individual_two][selected_individual])
 
-	# uma parte vai por elitismo
-	selected = np.append(selected, np.argmin(fitness))
-
-
-
-	return selected, fitness[selected]
+	return selected
 
 
 def generate_ox_individual(individual_one, individual_two, cut_min, cut_max):
 
-	individual = np.append(individual_one[0: cut_min],
+	individual = np.append(individual_one[cut_max: ],
 						   individual_two[cut_min: cut_max])
 
 	individual = np.append(individual,
-						   	individual_one[cut_max: -1])
+						   	individual_one[0: cut_min])
 
 	individual = individual.astype(int)
 
@@ -90,6 +83,8 @@ def generate_ox_individual(individual_one, individual_two, cut_min, cut_max):
 		## vamos adicionar esses locais no final
 
 		not_in_route = np.setdiff1d(np.array(range(0, len(individual_one))), individual)
+
+		np.random.shuffle(not_in_route)
 
 		individual = np.append(individual, not_in_route)
 
@@ -119,11 +114,10 @@ def crossover_operator(population, fitness):
 	### os individuos aqui devem chegar ordenados pelo fitness
 
 	## salvando o melhor individual
-	best_individual = population[0]
+	#best_individual = population[0]
 
 
 	for i in range(1, len(population), 2):
-
 
 		individual_one = population[i - 1]
 
@@ -131,31 +125,35 @@ def crossover_operator(population, fitness):
 
 		individual_one, individual_two = ox_crossover(individual_one, individual_two)
 
-		population[i] = individual_one
+		population[i - 1] = individual_one
 
-		population[i + 1] = individual_two
+		population[i] = individual_two
 
-	population = np.concatenate((population, [best_individual]))
+	#population = np.concatenate((population, [best_individual]))
 
 	return population
 
 
 def mutation_operator(population, mutation_rate):
 
-
 	for index, individual in enumerate(population):
 
 		if np.random.random(1)[0] <= mutation_rate:
 
-			gene_index_a = np.random.randint(0, len(individual))
+			## mutando diversos genes
+			amount_muted_genes = np.random.randint(0, len(individual))
 
-			gene_index_b = np.random.randint(0, len(individual))
+			for _ in range(0, amount_muted_genes):
 
-			gene_a, gene_b = individual[gene_index_a], individual[gene_index_b]
+				gene_index_a = np.random.randint(0, len(individual))
 
-			population[index][gene_index_a] = gene_a
+				gene_index_b = np.random.randint(0, len(individual))
 
-			population[index][gene_index_b] = gene_b
+				gene_a, gene_b = individual[gene_index_a], individual[gene_index_b]
+
+				population[index][gene_index_a] = gene_a
+
+				population[index][gene_index_b] = gene_b
 
 	return population
 
@@ -178,6 +176,20 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 	population = generate_initial_population(len(input_matrix), params['population'])
 
+	# import construtive_heuristic
+
+	# const_solution, _ = construtive_heuristic.greedy_constructive_heuristic(input_matrix, distance_matrix, 'central')
+
+	# const_solution -= 1
+
+	# population = np.concatenate((population, [const_solution]))
+
+	#population = np.concatenate((population, [const_solution]))
+
+	#print(population)
+
+	#exit()
+
 	measure_indivdual_fitness = partial(measure_fitness, distance_matrix)
 
 	for generation in range(0, params['generations']):
@@ -186,7 +198,7 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 		best_index = np.argmin(fitness)
 
-		if generation == 0 or population_params['best_fitness'] < fitness[best_index]:
+		if generation == 0 or population_params['best_fitness'] > fitness[best_index]:
 
 			population_params['best_fitness'] = fitness[best_index]
 
@@ -199,23 +211,22 @@ def genetic_algorithm(input_matrix, distance_matrix):
 			generation_equal += 1
 
 		## agora começam as operações genéticas
-
 		print(population_params['best_fitness'])
 
 		##selection - tem uma parte que é por elitismo
-		selected_individuals, selected_fitness = tournament_selection(fitness)
-
+		selected_individuals = tournament_selection(fitness)
 
 		## crossover - os individuos mais aptos cruzam com os mais aptos
-		sort_index = np.argsort(selected_fitness)
+		sort_index = np.argsort(fitness[selected_individuals])
 
 		population = crossover_operator(population[selected_individuals][sort_index],
-										selected_fitness[sort_index])
+										fitness[selected_individuals][sort_index])
 
 
-		if generation_equal % 5 == 0:
+		if generation_equal % 5 == 0 and params['mutation_rate'] <= 0.20:
 
 			params['mutation_rate'] += 0.02
+
 
 		population = mutation_operator(population, params['mutation_rate'])
 

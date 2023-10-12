@@ -62,9 +62,9 @@ if __name__ == '__main__':
 
 	for file_instance in os.listdir("Entrada/EUC_2D/"):
 
-		print(file_instance)
+		#print(file_instance)
 
-		input_matrix, edge_type = common_operations.read_instances("att48.tsp")
+		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
 		#plot_places(input_matrix)
 
@@ -75,6 +75,6 @@ if __name__ == '__main__':
 
 		#random_result = greedy_constructive_heuristic(input_matrix, distance_matrix, 'random')
 
-		print(central_result)
+		#print(central_result)
 
-		break
+		#break
