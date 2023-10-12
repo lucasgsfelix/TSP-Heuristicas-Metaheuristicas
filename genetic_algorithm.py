@@ -176,25 +176,13 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 	population = generate_initial_population(len(input_matrix), params['population'])
 
-	# import construtive_heuristic
-
-	# const_solution, _ = construtive_heuristic.greedy_constructive_heuristic(input_matrix, distance_matrix, 'central')
-
-	# const_solution -= 1
-
-	# population = np.concatenate((population, [const_solution]))
-
-	#population = np.concatenate((population, [const_solution]))
-
-	#print(population)
-
-	#exit()
-
 	measure_indivdual_fitness = partial(measure_fitness, distance_matrix)
 
 	for generation in range(0, params['generations']):
 
 		fitness = np.array(list(map(measure_indivdual_fitness, population)))
+
+		#print("--> ", np.min(fitness), np.max(fitness))
 
 		best_index = np.argmin(fitness)
 
@@ -241,10 +229,7 @@ if __name__ == '__main__':
 
 		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
-		#plot_places(input_matrix)
-
 		distance_matrix = common_operations.generate_distance_matrix(input_matrix, edge_type)
-
 		
 		genetic_algorithm(input_matrix, distance_matrix)		
 
