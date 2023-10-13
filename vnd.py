@@ -29,45 +29,53 @@ def solution_neighborhood_2opt(solution, distance_matrix):
 
 	solution_improving = True
 
-	while solution_improving:
+	fitness_sol = measure_fitness(distance_matrix, solution)
 
-		solution_improving = False
+	for index_a in range(1, len(solution) - 2):
 
-		for index_a in range(1, len(solution) - 2):
+		for index_b in range(index_a + 1, len(solution)):
 
-			for index_b in range(index_a + 1, len(solution)):
+			# caso onde index_a e index_b são adjascentes
+			if index_b - index_a == 1:
 
-				# caso onde index_a e index_b são adjascentes
-				if index_b - index_a == 1:
+				continue
 
-					continue
+			new_solution = solution.copy()
 
-				new_solution = solution.copy()
+			## swap
+			new_solution[index_a], new_solution[index_b] = solution[index_b], solution[index_a]
 
-				## swap
-				new_solution[index_a], new_solution[index_b] = solution[index_b], solution[index_a]
+			fitness_nova_sol = measure_fitness(distance_matrix, new_solution)
 
-				if measure_fitness(distance_matrix, solution) > measure_fitness(distance_matrix, new_solution):
+			if fitness_sol > fitness_nova_sol:
 
-					solution = new_solution
+				return new_solution, fitness_nova_sol, True
 
-					solution_improving = True
-
-	return solution
+	return solution, fitness_sol, False
 
 def variable_neighborhood_descent(input_matrix, distance_matrix):
 
 	solution = generate_solution(len(input_matrix))
 
-	print(measure_fitness(distance_matrix, solution))
+	count = 0
 
-	for _ in range(0, 100):
+	for _ in range(0, 1000):
 
-		solution = solution_neighborhood_2opt(solution, distance_matrix)
+		solution, fitness, improved = solution_neighborhood_2opt(solution, distance_matrix)
 
-		print(measure_fitness(distance_matrix, solution))
+		if not improved:
 
-	return start_solution
+			count += 1
+
+		else:
+
+			count = 0
+
+		if count >= 10:
+
+			break
+
+	return solution, fitness
 
 
 if __name__ == '__main__':
@@ -77,10 +85,10 @@ if __name__ == '__main__':
 
 		print(file_instance)
 
-		input_matrix, edge_type = common_operations.read_instances('st70.tsp')
+		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
 		distance_matrix = common_operations.generate_distance_matrix(input_matrix, edge_type)
 		
-		solution = variable_neighborhood_descent(input_matrix, distance_matrix)
+		solution, fitness = variable_neighborhood_descent(input_matrix, distance_matrix)
 
-		break
+		print(file_instance, fitness)
