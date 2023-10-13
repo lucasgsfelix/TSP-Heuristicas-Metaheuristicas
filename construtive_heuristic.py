@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
 	for file_instance in os.listdir("Entrada/EUC_2D/"):
 
-		#print(file_instance)
+		sprint(file_instance)
 
 		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
@@ -73,8 +73,3 @@ if __name__ == '__main__':
 		## dado um local aleatório inicial, vá sempre para o local mais próximo a ele
 		central_result = greedy_constructive_heuristic(input_matrix, distance_matrix, 'central')
 
-		#random_result = greedy_constructive_heuristic(input_matrix, distance_matrix, 'random')
-
-		#print(central_result)
-
-		#break

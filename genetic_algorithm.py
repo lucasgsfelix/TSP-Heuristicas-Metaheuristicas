@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
 		print(file_instance)
 
-		input_matrix, edge_type = common_operations.read_instances(file_instance)
+		input_matrix, edge_type = common_operations.read_instances('st70.tsp')
 
 		distance_matrix = common_operations.generate_distance_matrix(input_matrix, edge_type)
 		
