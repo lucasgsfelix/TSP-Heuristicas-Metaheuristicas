@@ -86,3 +86,10 @@ def plot_places(input_matrix):
 
 	plt.show()
 
+
+def write_results(instance_file, result, output_file):
+
+	with open(output_file, 'a') as file:
+
+		file.write(instance_file.replace('.tsp', '') + ' & ' + str(result) + '\n')
+

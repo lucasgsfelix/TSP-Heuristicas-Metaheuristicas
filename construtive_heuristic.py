@@ -60,9 +60,8 @@ def greedy_constructive_heuristic(input_matrix, distance_matrix, first_place='ra
 if __name__ == '__main__':
 
 
-	for file_instance in os.listdir("Entrada/EUC_2D/"):
 
-		sprint(file_instance)
+	for file_instance in os.listdir("Entrada/EUC_2D/"):
 
 		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
@@ -71,5 +70,6 @@ if __name__ == '__main__':
 		distance_matrix = common_operations.generate_distance_matrix(input_matrix, edge_type)
 
 		## dado um local aleatório inicial, vá sempre para o local mais próximo a ele
-		central_result = greedy_constructive_heuristic(input_matrix, distance_matrix, 'central')
+		_, central_result = greedy_constructive_heuristic(input_matrix, distance_matrix, 'central')
 
+		common_operations.write_results(file_instance, central_result, "results.txt")

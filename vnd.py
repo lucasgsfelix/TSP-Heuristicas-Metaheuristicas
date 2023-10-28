@@ -53,6 +53,7 @@ def solution_neighborhood_2opt(solution, distance_matrix):
 
 	return solution, fitness_sol, False
 
+
 def variable_neighborhood_descent(input_matrix, distance_matrix):
 
 	solution = generate_solution(len(input_matrix))
@@ -83,12 +84,10 @@ if __name__ == '__main__':
 
 	for file_instance in os.listdir("Entrada/EUC_2D/"):
 
-		print(file_instance)
-
 		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
 		distance_matrix = common_operations.generate_distance_matrix(input_matrix, edge_type)
 		
 		solution, fitness = variable_neighborhood_descent(input_matrix, distance_matrix)
 
-		print(file_instance, fitness)
+		common_operations.write_results(file_instance, fitness, "results.txt")
