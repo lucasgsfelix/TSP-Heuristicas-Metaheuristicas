@@ -54,9 +54,59 @@ def solution_neighborhood_2opt(solution, distance_matrix):
 	return solution, fitness_sol, False
 
 
+
+def greedy_constructive_heuristic(input_matrix, distance_matrix, first_place='random'):
+	"""
+		
+		A seleção do primeiro lugar pode impactar muito na escolha
+		Então temos dois tipos de escolha:
+		- Aleatória
+		- Ponto Central
+
+	"""
+
+	if first_place == 'random':
+
+		start_place = np.random.randint(0, len(input_matrix))
+
+	else:
+
+		start_place = np.argmin(np.sum(distance_matrix, axis=0))
+
+	route = np.array([], dtype=int)
+
+	route = np.append(route, start_place)
+
+	all_places = np.array(range(0, len(input_matrix)))
+
+	total_costs = 0
+
+	while len(route) != len(input_matrix):
+
+		places_available = np.setdiff1d(all_places, route)
+
+		places_available = places_available[places_available != start_place]
+
+		# qual é o local de menor distância que não esta a rota ainda?
+		index_place = np.argmin(distance_matrix[start_place][places_available])
+
+		total_costs += distance_matrix[start_place][places_available[index_place]]
+
+		start_place = places_available[index_place]
+
+		route = np.append(route, start_place)
+
+
+	## calculando a qualidade da solução
+
+	return route, total_costs
+
+
 def variable_neighborhood_descent(input_matrix, distance_matrix):
 
-	solution = generate_solution(len(input_matrix))
+	#solution = generate_solution(len(input_matrix))
+
+	solution, _ = greedy_constructive_heuristic(input_matrix, distance_matrix, 'central')
 
 	count = 0
 
@@ -72,11 +122,14 @@ def variable_neighborhood_descent(input_matrix, distance_matrix):
 
 			count = 0
 
-		if count >= 10:
+		if count >= 100:
 
 			break
 
 	return solution, fitness
+
+
+
 
 
 if __name__ == '__main__':

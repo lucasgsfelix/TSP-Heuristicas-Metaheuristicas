@@ -21,9 +21,58 @@ def generate_solution(input_matrix_size):
 
 	return all_places
 
-def generate_initial_population(input_matrix_size, population_size):
 
-	return np.array([generate_solution(input_matrix_size) for _ in range(0, population_size)])
+def greedy_constructive_heuristic(input_matrix, distance_matrix, first_place='random'):
+	"""
+		
+		A seleção do primeiro lugar pode impactar muito na escolha
+		Então temos dois tipos de escolha:
+		- Aleatória
+		- Ponto Central
+
+	"""
+
+	if first_place == 'random':
+
+		start_place = np.random.randint(0, len(input_matrix))
+
+	else:
+
+		start_place = np.argmin(np.sum(distance_matrix, axis=0))
+
+	route = np.array([], dtype=int)
+
+	route = np.append(route, start_place)
+
+	all_places = np.array(range(0, len(input_matrix)))
+
+	total_costs = 0
+
+	while len(route) != len(input_matrix):
+
+		places_available = np.setdiff1d(all_places, route)
+
+		places_available = places_available[places_available != start_place]
+
+		# qual é o local de menor distância que não esta a rota ainda?
+		index_place = np.argmin(distance_matrix[start_place][places_available])
+
+		total_costs += distance_matrix[start_place][places_available[index_place]]
+
+		start_place = places_available[index_place]
+
+		route = np.append(route, start_place)
+
+
+	## calculando a qualidade da solução
+
+	return route
+
+
+def generate_initial_population(input_matrix, population_size):
+
+	return np.array([greedy_constructive_heuristic(input_matrix, distance_matrix, 'random')
+					for _ in range(0, int(population_size/2))])
 
 
 def measure_fitness(distance_matrix, individual):
@@ -62,6 +111,8 @@ def generate_ox_individual(individual_one, individual_two, cut_min, cut_max):
 
 	individual = np.append(individual,
 						   	individual_one[0: cut_min])
+
+	#print("--> ", individual, individual_one)
 
 	individual = individual.astype(int)
 
@@ -115,15 +166,19 @@ def crossover_operator(population, fitness):
 
 	## salvando o melhor individual
 	#best_individual = population[0]
-
-
 	for i in range(1, len(population), 2):
 
-		individual_one = population[i - 1]
+		individual_one = population[i - 1].copy()
 
-		individual_two = population[i]
+		individual_two = population[i].copy()
 
 		individual_one, individual_two = ox_crossover(individual_one, individual_two)
+
+		#population[i - 1] = order_crossover(individual_one, individual_two)
+
+		#population[i] = order_crossover(individual_two, individual_one)
+
+
 
 		population[i - 1] = individual_one
 
@@ -141,7 +196,7 @@ def mutation_operator(population, mutation_rate):
 		if np.random.random(1)[0] <= mutation_rate:
 
 			## mutando diversos genes
-			amount_muted_genes = np.random.randint(0, len(individual))
+			amount_muted_genes = np.random.randint(1, len(individual))
 
 			for _ in range(0, amount_muted_genes):
 
@@ -151,9 +206,9 @@ def mutation_operator(population, mutation_rate):
 
 				gene_a, gene_b = individual[gene_index_a], individual[gene_index_b]
 
-				population[index][gene_index_a] = gene_a
+				population[index][gene_index_a] = gene_b
 
-				population[index][gene_index_b] = gene_b
+				population[index][gene_index_b] = gene_a
 
 	return population
 
@@ -162,8 +217,8 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 
 	params = {
-		"generations": 100,
-		"population": 100,
+		"generations": 300,
+		"population": 300,
 		"mutation_rate": 0.05
 	}
 
@@ -174,7 +229,12 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 	generation_equal = 0
 
-	population = generate_initial_population(len(input_matrix), params['population'])
+	population = generate_initial_population(input_matrix, params['population'])
+
+	half_random = np.array([generate_solution(len(input_matrix))
+					for _ in range(0, int(params['population']/2))])
+
+	population = np.vstack((population, half_random))
 
 	measure_indivdual_fitness = partial(measure_fitness, distance_matrix)
 
@@ -182,7 +242,7 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 		fitness = np.array(list(map(measure_indivdual_fitness, population)))
 
-		#print("--> ", np.min(fitness), np.max(fitness))
+		#print("--> ", np.min(fitness), np.max(fitness), np.mean(fitness))
 
 		best_index = np.argmin(fitness)
 
@@ -199,10 +259,11 @@ def genetic_algorithm(input_matrix, distance_matrix):
 			generation_equal += 1
 
 		## agora começam as operações genéticas
-		print(population_params['best_fitness'])
+		#print(population_params['best_fitness'])
 
 		##selection - tem uma parte que é por elitismo
 		selected_individuals = tournament_selection(fitness)
+		#selected_individuals = range(0, 100)
 
 		## crossover - os individuos mais aptos cruzam com os mais aptos
 		sort_index = np.argsort(fitness[selected_individuals])
@@ -218,6 +279,8 @@ def genetic_algorithm(input_matrix, distance_matrix):
 
 		population = mutation_operator(population, params['mutation_rate'])
 
+	return population_params['best_fitness']
+
 
 
 if __name__ == '__main__':
@@ -225,12 +288,12 @@ if __name__ == '__main__':
 
 	for file_instance in os.listdir("Entrada/EUC_2D/"):
 
-		print(file_instance)
-
-		input_matrix, edge_type = common_operations.read_instances('st70.tsp')
+		input_matrix, edge_type = common_operations.read_instances(file_instance)
 
 		distance_matrix = common_operations.generate_distance_matrix(input_matrix, edge_type)
 		
-		genetic_algorithm(input_matrix, distance_matrix)		
+		best_result = genetic_algorithm(input_matrix, distance_matrix)
 
-		break
+		print(file_instance, best_result)
+
+		common_operations.write_results(file_instance, best_result , "results.txt")
